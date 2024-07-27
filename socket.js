@@ -180,7 +180,7 @@ const socket = async (io) => {
 
     socket.on("message", async (data) => {
       const images = [];
-      // console.log(194, data,socket?.user?._id)
+
 
       if (data.images) {
         data.images.map(async (image) => {
