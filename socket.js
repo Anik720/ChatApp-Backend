@@ -314,8 +314,7 @@ const socket = async (io) => {
                   room.roomId = room._id.toString();
                   return room?._id.toString() === room._id.toString();
                 });
-                const infoImageApproval = await ImageApproval.findOne({roomId: room._id})
-                currentRoom.infoImageApproval = infoImageApproval
+
                 io.to(memberSocketId).emit("rooms", rooms);
                 io.to(memberSocketId).emit("setCurrentRoom", currentRoom);
               }
@@ -398,8 +397,6 @@ const socket = async (io) => {
                 room.roomId = room._id.toString();
                 return room?._id.toString() === room._id.toString();
               });
-              const infoImageApproval = await ImageApproval.findOne({roomId: room._id})
-              currentRoom.infoImageApproval = infoImageApproval
               io.to(memberSocketId).emit("rooms", rooms);
               io.to(memberSocketId).emit("setCurrentRoom", currentRoom);
             }
@@ -439,19 +436,37 @@ const socket = async (io) => {
     });
 
     socket.on("imagePermission", async ({ roomId,senderid, recieverid }) => {
-      console.log(177, roomId, senderid, recieverid);
+      console.log(439, roomId,senderid, recieverid )
+      
       const result = await Room.findByIdAndUpdate(roomId, {
         imagesPermission: {
           active: true,
         },
       })
+      const result2 = await ImageApproval.findOneAndUpdate(
+        { roomId: roomId }, // filter object
+        { status: true }, // update object
+        { new: true } // options to return the updated document
+      );
+
+      console.log(448, result2)
+      console.log(453, result)
 
 
 
-     result?.members.forEach(async (member) => {
+      result &&  result?.members.forEach(async (member) => {
         const memberSocketId = userSocketMap.get(member.toString());
         io.to(memberSocketId).emit("imagePermissionApproved",roomId, senderid, recieverid)
       });
+
+      // if(result2){
+      //   let arr = [senderid, recieverid]
+      //   arr?.forEach(async (member) => {
+      //     const memberSocketId = userSocketMap.get(member.toString());
+      //     io.to(memberSocketId).emit("imagePermissionApproved",roomId, senderid, recieverid)
+      //   });
+  
+      // }
 
   
 
