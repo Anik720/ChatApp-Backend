@@ -13,5 +13,6 @@ Router.route("/group").post(roomController.createGroupRoom);
 Router.route("/joinGroup").post(roomController.joinGroup);
 Router.route("/leaveGroup").post(roomController.leaveGroup);
 Router.route("/deleteChat").post(roomController.deleteChat);
+Router.route("/get-image-approval-list").get(roomController.getImageApprovalList);
 
 module.exports = Router;

@@ -20,7 +20,7 @@ Router.get("/", async (req, res) => {
 
 Router.use("/auth", ipChecker, AuthRoutes);
 Router.use("/user", ipChecker, authChecker, UserRoutes);
-Router.use("/room", ipChecker,authChecker, RoomRoutes);
+Router.use("/room", RoomRoutes);
 Router.use(
   "/conversation",
   ipChecker,
