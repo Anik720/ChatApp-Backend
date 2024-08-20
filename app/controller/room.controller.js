@@ -267,7 +267,7 @@ module.exports.getImageApprovalList = async (req, res) => {
 
   try {
 
-    const list = await ImageApproval.find({recieverId: userId});
+    const list = await ImageApproval.find({ recieverId: userId }).populate(["senderId", "recieverId"]);
 
     if (!list) {
       return res.status(400).json({

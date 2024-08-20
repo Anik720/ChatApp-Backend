@@ -245,11 +245,19 @@ const socket = async (io) => {
           });
 
           if (room?.imagesPermission?.active === false) {
-            await ImageApproval.create({
+            const res = await ImageApproval.findOne({
               roomId: roomId,
               senderId: senderID,
               recieverId: recieverId
             })
+            if(!res){
+              await ImageApproval.create({
+                roomId: roomId,
+                senderId: senderID,
+                recieverId: recieverId
+              })
+            }
+
             await Room.findByIdAndUpdate(roomId, {
 
               imagesPermission: {
