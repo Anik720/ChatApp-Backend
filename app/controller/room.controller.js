@@ -1,5 +1,6 @@
 const Conversation = require("../model/conversation");
 const ImageApproval = require("../model/imageApproval");
+const MessageApproval = require("../model/messageApproval");
 const Room = require("../model/room");
 
 module.exports.getRoom = async (req, res) => {
@@ -268,6 +269,36 @@ module.exports.getImageApprovalList = async (req, res) => {
   try {
 
     const list = await ImageApproval.find({ recieverId: userId }).populate(["senderId", "recieverId"]);
+
+    if (!list) {
+      return res.status(400).json({
+        message: "not found",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "List  fetched successfully",
+      success: true,
+      list,
+    });
+
+
+  } catch (error) {
+
+    return res.status(400).json({
+      message: error.message,
+      success: false,
+    });
+
+  }
+}
+module.exports.getMessageApprovalList = async (req, res) => {
+  const { userId } = req.query;
+
+  try {
+
+    const list = await MessageApproval.find({ recieverId: userId }).populate(["senderId", "recieverId"]);
 
     if (!list) {
       return res.status(400).json({

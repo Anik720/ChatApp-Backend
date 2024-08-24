@@ -7,6 +7,7 @@ const MyDeviceDetector = require("./app/helpers/deviceDetector");
 const Device = require("./app/model/device");
 const imageUpload = require("./app/middleware/imageUploader");
 const ImageApproval = require("./app/model/imageApproval");
+const MessageApproval = require("./app/model/messageApproval");
 function getCookieValue(cookieString, key) {
   const cookies = cookieString?.split("; ").reduce((acc, cookie) => {
     const [k, v] = cookie.split("=");
@@ -187,7 +188,6 @@ const socket = async (io) => {
       if (data.images) {
         data.images.map(async (image) => {
           const url = await imageUpload(image);
-          console.log(url);
           images.push(url);
         });
       }
@@ -224,8 +224,23 @@ const socket = async (io) => {
         let recieverStatus = data?.members?.find((member) => {
           return member.status === "active";
         });
+        console.log(226, senderStatus)
+        console.log(227, recieverStatus)
 // //////////////////////////////////////////////////////////////
-        if (senderStatus === "pending" && recieverStatus?.status === "active" && room?.isGroup === false) {
+        if (senderStatus === "pending" && recieverStatus?.status === "active" && room?.isGroup === false && room?.messagePermission?.active === false) {
+
+          const res = await MessageApproval.findOne({
+            roomId: roomId,
+            senderId: socket?.user?._id,
+            recieverId: recieverStatus?._id
+          })
+          if(!res){
+            await MessageApproval.create({
+              roomId: roomId,
+              senderId: socket?.user?._id,
+              recieverId: recieverStatus?._id
+            })
+          }
 
           data.members.forEach(async (member) => {
             const memberSocketId = userSocketMap.get(member._id || member);
@@ -451,6 +466,8 @@ const socket = async (io) => {
       const result = await Room.findByIdAndUpdate(roomId, {
         imagesPermission: {
           active: true,
+          senderID: senderid,
+          recieverId: recieverid,
         },
       })
       const result2 = await ImageApproval.findOneAndUpdate(
@@ -459,14 +476,43 @@ const socket = async (io) => {
         { new: true } // options to return the updated document
       );
 
-      console.log(448, result2)
-      console.log(453, result)
-
-
 
       result &&  result?.members.forEach(async (member) => {
         const memberSocketId = userSocketMap.get(member.toString());
         io.to(memberSocketId).emit("imagePermissionApproved",roomId, senderid, recieverid)
+      });
+
+      // if(result2){
+      //   let arr = [senderid, recieverid]
+      //   arr?.forEach(async (member) => {
+      //     const memberSocketId = userSocketMap.get(member.toString());
+      //     io.to(memberSocketId).emit("imagePermissionApproved",roomId, senderid, recieverid)
+      //   });
+  
+      // }
+
+  
+
+    });
+    socket.on("guestUserMessageApprovalPermission", async ({ roomId,senderid, recieverid }) => {
+      console.log(497, roomId,senderid, recieverid )
+      
+      const result = await Room.findByIdAndUpdate(roomId, {
+        messagePermission: {
+          active: true,
+          senderID: senderid,
+          recieverId: recieverid,
+        },
+      })
+      const result2 = await MessageApproval.findOneAndUpdate(
+        { roomId: roomId }, // filter object
+        { status: true }, // update object
+        { new: true } // options to return the updated document
+      );
+
+      result &&  result?.members.forEach(async (member) => {
+        const memberSocketId = userSocketMap.get(member.toString());
+        io.to(memberSocketId).emit("guestUserMessageRequestApproved",roomId, senderid, recieverid)
       });
 
       // if(result2){

@@ -27,6 +27,15 @@ const RoomSchema = new Schema(
       senderID: String,
       recieverId: String,
     },
+    messagePermission: {
+      active: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
+      senderID: String,
+      recieverId: String,
+    },
     isGroup: {
       type: Boolean,
       required: false,
