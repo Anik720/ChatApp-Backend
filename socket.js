@@ -158,11 +158,13 @@ const socket = async (io) => {
           }
         });
         const infoImageApproval = await ImageApproval.findOne({roomId})
+        const curreentRoom = await Room.findOne({_id : roomId})
 
         socket.emit("preChat", {
           conversation,
           roomId,
           infoImageApproval,
+          curreentRoom
         });
 
         socket.emit("rooms", rooms);
