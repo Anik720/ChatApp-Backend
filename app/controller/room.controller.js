@@ -263,6 +263,53 @@ module.exports.publicRooms = async (req, res) => {
 
   }
 }
+module.exports.getRooms = async (req, res) => {
+  try {
+    console.log(268, req.user._id)
+    let rooms = await Room.find({
+      $or: [{ host: req.user._id }, { members: req.user._id }],
+      $nor: [{ deletedBy: req.user._id }],
+    })
+      .sort({ updated_at: -1 })
+      .populate("members", "name email nickName phone status")
+      .populate("host", "name email nickName phone");
+
+   console.log(276, rooms)
+    rooms = await Promise.all(
+      rooms.map(async (room) => {
+        const lastConversation = await Conversation.findOne({
+          roomId: room._id,
+        })
+          .sort({ created_at: -1 })
+          .populate("from", "name email nickName phone");
+
+        const unseenMessageCount = await Conversation.countDocuments({
+          roomId: room._id,
+          status: "sent",
+        });
+
+        return {
+          ...room.toObject(),
+          lastConversation: lastConversation || {},
+          unseenMessageCount: unseenMessageCount || 0,
+        };
+      })
+    );
+
+console.log(297, rooms)
+    return res.status(200).json({
+      message: "rooms fetched successfully",
+      success: true,
+      rooms,
+    });
+
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message,
+      success: false,
+    });
+  }
+}
 module.exports.getImageApprovalList = async (req, res) => {
   const { userId } = req.query;
 

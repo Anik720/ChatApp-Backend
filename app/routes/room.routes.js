@@ -3,12 +3,14 @@ const Router = express.Router();
 
 // Import the controllers
 const roomController = require("../controller/room.controller");
+const { authChecker } = require("../middleware/auth.middleware");
 
 // import the middleware
 
 Router.route("/").get(roomController.getRoom);
 Router.route("/search/:id").get(roomController.getRoomByUserId);
 Router.route("/public-rooms").get(roomController.publicRooms);
+Router.route("/all-rooms").get(authChecker, roomController.getRooms);
 Router.route("/group").post(roomController.createGroupRoom);
 Router.route("/joinGroup").post(roomController.joinGroup);
 Router.route("/leaveGroup").post(roomController.leaveGroup);
