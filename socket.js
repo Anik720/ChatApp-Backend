@@ -267,6 +267,10 @@ const socket = async (io) => {
           // let allrooms = await getRooms(socket);
           // console.log(268, allrooms)
           // socket.emit("rooms", allrooms);
+          let findSender = await User.findOne({
+            _id: socket?.user?._id,
+          })
+          console.log(273, findSender)
           data.members.forEach(async (member) => {
             const memberSocketId = userSocketMap.get(member._id || member);
             if (memberSocketId) {
@@ -274,6 +278,9 @@ const socket = async (io) => {
                 roomId: room._id,
                 senderId: socket?.user?._id,
                 recieverId: recieverStatus?._id,
+                room,
+                senderInfo: findSender,
+                recieverInfo: recieverStatus
               });
             }
           });
