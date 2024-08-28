@@ -196,6 +196,8 @@ const socket = async (io) => {
       let roomId = data.roomId || null;
       console.log(195, data);
 
+
+
       try {
         if (!roomId) {
           room = await Room.findOne({
@@ -374,11 +376,16 @@ const socket = async (io) => {
               }
             });
           }
-        } else {
+        }
+        
+        else {
           // update room updated_at
-          await Room.findByIdAndUpdate(room?._id, {
-            updated_at: Date.now(),
-          });
+          if(room?._id){
+            await Room.findByIdAndUpdate(room?._id, {
+              updated_at: Date.now(),
+            });
+          }
+    
 
           let ip;
           if (socket.handshake.headers["x-forwarded-for"]) {
@@ -427,12 +434,24 @@ const socket = async (io) => {
           const conversationPopulated = await Conversation.findById(
             conversation._id
           ).populate("from", "name email nickName");
+          console.log(430,data?.members)
+          let findRoom 
+          if(room._id){
+             findRoom = await Room.findById({_id : room._id}).populate('members')
+            console.log(200, findRoom);
+          }
+          const memberIds = findRoom?.members?.map(member => JSON.stringify(member?._id) );
 
-          data.members.forEach(async (member) => {
-            const memberSocketId = userSocketMap.get(member._id || member);
+        // //  console.log(435, memberIds);
+         findRoom.members = memberIds
+
+         findRoom?.members.forEach(async (member) => {
+            // console.log(434, JSON.stringify(member._id ) )
+            const memberSocketId = userSocketMap.get(member._id?.toString() || member);
+            // const memberSocketId = userSocketMap.get(member._id.toString() || member);
             if (memberSocketId) {
               io.to(memberSocketId).emit("notifyMessage", {
-                conversation: conversationPopulated,
+                conversation: conversationPopulated,  
                 roomId: room._id,
                 member: member,
               });
@@ -451,6 +470,8 @@ const socket = async (io) => {
               io.to(memberSocketId).emit("setCurrentRoom", currentRoom);
             }
           });
+
+
         }
       } catch (error) {
         console.log(error);

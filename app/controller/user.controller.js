@@ -168,11 +168,15 @@ module.exports.searchUserByNickName = async (req, res) => {
       users.map(async (user) => {
         const room = await Room.findOne({
           members: { $all: [req.user._id, user._id] },
-        });
+        })
+        .populate("members", "name email nickName phone")
+        .populate("host", "name email nickName phone");
 
+        delete room?._doc?.name
         return {
           ...user._doc,
           roomId: room ? room._id : null,
+          ...room?._doc
         };
       })
     );
