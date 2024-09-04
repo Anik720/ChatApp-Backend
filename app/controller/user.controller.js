@@ -1,6 +1,7 @@
 const { default: mongoose } = require("mongoose");
 const Room = require("../model/room");
 const User = require("../model/user");
+const Conversation = require("../model/conversation");
 
 module.exports.get = async (req, res, next) => {
   try {
@@ -157,29 +158,45 @@ module.exports.delete = async (req, res, next) => {
 module.exports.searchUserByNickName = async (req, res) => {
   try {
     const { nickName } = req.params;
-    
+
     let users = await User.find({
       nickName: { $regex: nickName, $options: "i" },
-      $nor: [{ _id: req.user._id }],
+      $nor: [{ _id: req?.user?._id?.toString() }],
     });
-
-
+    console.log(161, users)
     users = await Promise.all(
       users.map(async (user) => {
         const room = await Room.findOne({
-          members: { $all: [req.user._id, user._id] },
+          members: { $all: [req?.user?._id.toString(), user?._id.toString()] },
         })
-        .populate("members", "name email nickName phone")
-        .populate("host", "name email nickName phone");
+          .populate("members", "name email nickName phone")
+          .populate("host", "name email nickName phone");
+          console.log(174, room)
+        const lastConversation = await Conversation.findOne({
+          roomId: room?._id.toString(),
+        })
+          .sort({ created_at: -1 })
+          .populate("from", "name email nickName phone");
 
-        delete room?._doc?.name
+        const unseenMessageCount = await Conversation.countDocuments({
+          roomId: room?._id.toString(),
+          status: "sent",
+        });
+        delete room?._doc?.name;
+
+        let obj = {
+          ...room?._doc,
+          lastConversation: lastConversation || {},
+          unseenMessageCount: unseenMessageCount || 0,
+        };
         return {
           ...user._doc,
           roomId: room ? room._id : null,
-          ...room?._doc
+          ...obj,
         };
       })
     );
+    console.log(199, users)
 
     return res.status(200).json({
       message: "Users fetched successfully",
